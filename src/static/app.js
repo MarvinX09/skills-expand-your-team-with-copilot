@@ -623,6 +623,11 @@ document.addEventListener("DOMContentLoaded", () => {
       shareActivity(name, details, shareDropdown);
     });
 
+    // Prevent dropdown clicks from bubbling to the global close handler
+    shareDropdown.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
     activityCard.querySelector(".share-copy").addEventListener("click", () => {
       copyToClipboard(shareUrl, shareDropdown);
     });
@@ -632,7 +637,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Build the share URL and text for an activity
   function buildShareData(name, details) {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
+    const params = new URLSearchParams(window.location.search);
+    params.set("activity", name);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     const shareText = `Check out "${name}" at Mergington High School! ${details.description}`;
     return { shareUrl, shareText };
   }
