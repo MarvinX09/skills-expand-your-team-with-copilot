@@ -609,14 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add share button handler
     const shareButton = activityCard.querySelector(".share-button");
     const shareDropdown = activityCard.querySelector(".share-dropdown");
-    shareButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      shareActivity(name, details, shareDropdown);
-    });
-
-    // Set up share option links
-    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
-    const shareText = `Check out "${name}" at Mergington High School! ${details.description}`;
+    const { shareUrl, shareText } = buildShareData(name, details);
 
     activityCard.querySelector(".share-twitter").href =
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
@@ -625,22 +618,61 @@ document.addEventListener("DOMContentLoaded", () => {
     activityCard.querySelector(".share-whatsapp").href =
       `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
 
+    shareButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      shareActivity(name, details, shareDropdown);
+    });
+
     activityCard.querySelector(".share-copy").addEventListener("click", () => {
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        showMessage("Link copied to clipboard!", "success");
-        shareDropdown.classList.add("hidden");
-      }).catch(() => {
-        showMessage("Failed to copy link.", "error");
-      });
+      copyToClipboard(shareUrl, shareDropdown);
     });
 
     activitiesList.appendChild(activityCard);
   }
 
-  // Share activity using Web Share API or fallback dropdown
-  function shareActivity(name, details, shareDropdown) {
+  // Build the share URL and text for an activity
+  function buildShareData(name, details) {
     const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
     const shareText = `Check out "${name}" at Mergington High School! ${details.description}`;
+    return { shareUrl, shareText };
+  }
+
+  // Copy text to clipboard with fallback for non-secure contexts
+  function copyToClipboard(text, shareDropdown) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showMessage("Link copied to clipboard!", "success");
+        shareDropdown.classList.add("hidden");
+      }).catch(() => {
+        fallbackCopyToClipboard(text, shareDropdown);
+      });
+    } else {
+      fallbackCopyToClipboard(text, shareDropdown);
+    }
+  }
+
+  // Fallback clipboard copy using a temporary textarea element
+  function fallbackCopyToClipboard(text, shareDropdown) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      showMessage("Link copied to clipboard!", "success");
+      shareDropdown.classList.add("hidden");
+    } catch {
+      showMessage("Failed to copy link.", "error");
+    }
+    document.body.removeChild(textarea);
+  }
+
+  // Share activity using Web Share API or fallback dropdown
+  function shareActivity(name, details, shareDropdown) {
+    const { shareUrl, shareText } = buildShareData(name, details);
 
     if (navigator.share) {
       navigator.share({
@@ -653,7 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     } else {
-      // Toggle the fallback dropdown
+      // Toggle the fallback dropdown, closing any others
       const allDropdowns = document.querySelectorAll(".share-dropdown");
       allDropdowns.forEach((dropdown) => {
         if (dropdown !== shareDropdown) {
@@ -664,7 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Close share dropdowns when clicking outside
+  // Close share dropdowns when clicking outside (registered once)
   document.addEventListener("click", () => {
     document.querySelectorAll(".share-dropdown").forEach((dropdown) => {
       dropdown.classList.add("hidden");
