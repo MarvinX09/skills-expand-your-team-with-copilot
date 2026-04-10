@@ -468,6 +468,70 @@ button {
   font-size: 0.85rem;
 }
 
+/* Social sharing */
+.share-container {
+  position: relative;
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.share-button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.share-button:hover {
+  background-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+.share-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.share-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-radius: 0;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.share-option:hover {
+  background-color: var(--border-light);
+  color: var(--text-primary);
+}
+
 footer {
   text-align: center;
   margin-top: 20px;

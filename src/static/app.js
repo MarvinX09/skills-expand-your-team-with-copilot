@@ -569,6 +569,25 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-container">
+        <button class="share-button" data-activity="${name}" aria-label="Share this activity">
+          <span class="share-icon">🔗</span> Share
+        </button>
+        <div class="share-dropdown hidden">
+          <a class="share-option share-twitter" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter">
+            <span>🐦</span> Twitter
+          </a>
+          <a class="share-option share-facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook">
+            <span>📘</span> Facebook
+          </a>
+          <a class="share-option share-whatsapp" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp">
+            <span>💬</span> WhatsApp
+          </a>
+          <button class="share-option share-copy" aria-label="Copy link">
+            <span>📋</span> Copy Link
+          </button>
+        </div>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -587,8 +606,70 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add share button handler
+    const shareButton = activityCard.querySelector(".share-button");
+    const shareDropdown = activityCard.querySelector(".share-dropdown");
+    shareButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      shareActivity(name, details, shareDropdown);
+    });
+
+    // Set up share option links
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
+    const shareText = `Check out "${name}" at Mergington High School! ${details.description}`;
+
+    activityCard.querySelector(".share-twitter").href =
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    activityCard.querySelector(".share-facebook").href =
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    activityCard.querySelector(".share-whatsapp").href =
+      `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
+
+    activityCard.querySelector(".share-copy").addEventListener("click", () => {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showMessage("Link copied to clipboard!", "success");
+        shareDropdown.classList.add("hidden");
+      }).catch(() => {
+        showMessage("Failed to copy link.", "error");
+      });
+    });
+
     activitiesList.appendChild(activityCard);
   }
+
+  // Share activity using Web Share API or fallback dropdown
+  function shareActivity(name, details, shareDropdown) {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(name)}`;
+    const shareText = `Check out "${name}" at Mergington High School! ${details.description}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `${name} – Mergington High School`,
+        text: shareText,
+        url: shareUrl,
+      }).catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("Error sharing:", err);
+        }
+      });
+    } else {
+      // Toggle the fallback dropdown
+      const allDropdowns = document.querySelectorAll(".share-dropdown");
+      allDropdowns.forEach((dropdown) => {
+        if (dropdown !== shareDropdown) {
+          dropdown.classList.add("hidden");
+        }
+      });
+      shareDropdown.classList.toggle("hidden");
+    }
+  }
+
+  // Close share dropdowns when clicking outside
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".share-dropdown").forEach((dropdown) => {
+      dropdown.classList.add("hidden");
+    });
+  });
 
   // Event listeners for search and filter
   searchInput.addEventListener("input", (event) => {
